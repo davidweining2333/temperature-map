@@ -37,6 +37,20 @@ class Map extends React.Component {
                     lat: '31.2303904'
                 }
             ],
+            linesDataSource: [
+                {
+                    key: "1",
+                    name: "西安-郑州-武汉",
+                    latLangs: [["34.345408", "108.945194"], ["34.753091", "113.630756"], ["30.59816", "114.312606"]],
+                    color: "red"
+                },
+                {
+                    key: "2",
+                    name: "成都-北京-上海",
+                    latLangs: [['30.662205', '104.071887'], ['39.92', '116.46'], ['31.2303904', '121.4737021']],
+                    color: "yellow"
+                }
+            ],
             columns: [
                 {
                     title: '名称',
@@ -53,6 +67,23 @@ class Map extends React.Component {
                     dataIndex: 'lat',
                     key: 'lat',
                 }
+            ],
+            linesColumns: [
+                {
+                    title: '线路名称',
+                    dataIndex: 'name',
+                    key: 'name',
+                },
+                // {
+                //     title: '经度',
+                //     dataIndex: 'lang',
+                //     key: 'lang',
+                // },
+                // {
+                //     title: '纬度',
+                //     dataIndex: 'lat',
+                //     key: 'lat',
+                // }
             ]
         }
         this.temperatureCharts = void 0;
@@ -76,15 +107,42 @@ class Map extends React.Component {
             this.temperatureCharts.setOption({
                 grid: { top: 10, bottom: 20, right: 20 },
                 title: {
-                    text: '气温趋势图'
+                    text: `${record.name}气温趋势图`,
+                    textStyle:{
+                        color:"white"
+                    }
                 },
                 tooltip: {
                     trigger: 'axis',
                 },
                 xAxis: {
                     type: 'time',
+                    axisPointer: {
+                        value: '2021-10-7',
+                        snap: true,
+                        lineStyle: {
+                            color: '#004E52',
+                            opacity: 0.5,
+                            width: 2
+                        },
+                        label: {
+                            show: true,
+                            formatter: function (params) {
+                                return echarts.format.formatTime('yyyy-MM-dd', params.value);
+                            },
+                            backgroundColor: '#004E52'
+                        },
+                        handle: {
+                            show: true,
+                            color: '#004E52'
+                        }
+                    },
                     // data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
                 },
+                dataZoom: [{
+                    type: 'inside',
+                    throttle: 50
+                }],
                 yAxis: {
                     type: 'value',
                     boundaryGap: [0, '100%'],
@@ -98,11 +156,81 @@ class Map extends React.Component {
                     data,
                     smooth: true
                 }]
-            });
+            }, true);
         };
-        this.randomData = function (now, oneDay, oneHour, value) {
+        this.refreshLineCharts = function (record) {
+            let base = 200;
+            if (record) {
+                switch (record.key) {
+                    case "cd":
+                        base = 10;
+                        break;
+                    case "bj":
+                        base = 0;
+                        break;
+                    case "sh":
+                        base = 20;
+                        break;
+                }
+            }
+            let data = this.generateData(base, 100);
+
+            this.temperatureCharts.setOption({
+                grid: { top: 10, bottom: 20, right: 20 },
+                title: {
+                    text: `${record.name}流量趋势图`,
+                    textStyle:{
+                        color:"white"
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                },
+                xAxis: {
+                    type: 'time',
+                    axisPointer: {
+                        value: '2021-01-28',
+                        snap: true,
+                        lineStyle: {
+                            color: '#004E52',
+                            opacity: 0.5,
+                            width: 2
+                        },
+                        label: {
+                            show: true,
+                            formatter: function (params) {
+                                return echarts.format.formatTime('yyyy-MM-dd', params.value);
+                            },
+                            backgroundColor: '#004E52'
+                        },
+                        handle: {
+                            show: true,
+                            color: '#004E52'
+                        }
+                    },
+                },
+                yAxis: {
+                    type: 'value',
+                    boundaryGap: [0, '100%'],
+                    splitLine: {
+                        show: false
+                    }
+                },
+                dataZoom: [{
+                    type: 'inside',
+                    throttle: 50
+                }],
+                series: [{
+                    name: '流量',
+                    type: 'line',
+                    data,
+                    smooth: true
+                }]
+            }, true);
+        };
+        this.randomData = function (now, oneDay, oneHour, value, changBase) {
             now = new Date(+now + oneHour);
-            value = value + Math.random() * 10;
+            value = value + Math.random() * (changBase || 10);
             return {
                 name: now.toString(),
                 value: [
@@ -112,14 +240,14 @@ class Map extends React.Component {
             };
         }
 
-        this.generateData = function (baseTemp) {
+        this.generateData = function (baseTemp, changBase) {
             var data = [];
             var now = +new Date();
             var oneDay = 24 * 3600 * 1000;
             var oneHour = 3600 * 1000;
             var value = Math.random() * 1000;
             for (var i = 0; i < 30 * 24; i++) {
-                data.push(this.randomData(now, oneDay, oneHour * i, baseTemp));
+                data.push(this.randomData(now, oneDay, oneHour * i, baseTemp, changBase));
             }
             return data;
         }
@@ -142,10 +270,26 @@ class Map extends React.Component {
 
         // }).addTo(this.map);
         this.state.dataSource.forEach(item => {
-            L.marker([item.lat, item.lang]).addTo(this.map)
+            let marker = L.marker([item.lat, item.lang], {
+                color: "red",
+                data: item
+            });
+            marker.bindTooltip(item.name).openTooltip();
+            marker.addTo(this.map);
+            marker.on("click", (event) => {
+                this.refreshCharts(event.target.options.data);
+            });
+        });
+        this.state.linesDataSource.forEach(item => {
+            let line = L.polyline(item.latLangs, { color: item.color ,data: item});
+            line.bindTooltip(item.name).openTooltip();
+            line.addTo(this.map)
+            line.on("click", (event) => {
+                this.refreshLineCharts(event.target.options.data);
+            });
         });
         setTimeout(() => {
-            this.map.fitBounds(this.state.dataSource.map(item => [item.lat, item.lang]));
+            this.map.fitBounds(this.state.dataSource.map(item => [item.lat, item.lang]).concat(this.state.linesDataSource.map(item => item.latLangs)));
         })
         // // add layer
         // this.layer = L.layerGroup().addTo(this.map);
@@ -153,7 +297,7 @@ class Map extends React.Component {
         //     center, zoom
         // )
         this.temperatureCharts = echarts.init(document.getElementById('tempuratureCharts'));
-        this.refreshCharts();
+        // this.refreshCharts();
 
     }
     componentDidUpdate({ markerPosition }) {
@@ -173,6 +317,19 @@ class Map extends React.Component {
                             onClick: event => {
                                 this.map.setView([record.lat, record.lang]);
                                 this.refreshCharts(record);
+                                console.log(record)
+                            }, // 点击行
+                        };
+                    }} />
+            </div>
+            <div className="lines-table-area">
+                <h4>线路列表</h4>
+                <Table dataSource={this.state.linesDataSource} columns={this.state.linesColumns} size="small"
+                    onRow={record => {
+                        return {
+                            onClick: event => {
+                                this.map.fitBounds(record.latLangs);
+                                this.refreshLineCharts(record);
                                 console.log(record)
                             }, // 点击行
                         };
