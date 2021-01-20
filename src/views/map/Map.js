@@ -7,7 +7,13 @@ import { Table } from 'antd';
 import './Map.less';
 import 'leaflet/dist/leaflet.css';
 import * as echarts from "echarts";
+import cities from "../../data/cities.csv";
+import historydata from "../../data/historydata.csv";
+import lines from "../../data/lines.csv";
 
+console.log(cities);
+console.log(historydata);
+console.log(lines);
 let DefaultIcon = L.icon({
     iconUrl: icon,
     shadowUrl: iconShadow,
@@ -234,7 +240,7 @@ class Map extends React.Component {
                     type: 'line',
                     data,
                     smooth: true,
-                    showSymbol: false
+                    showSymbol: false,
                 }]
             }, true);
         };
