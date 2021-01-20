@@ -10,7 +10,8 @@ import * as echarts from "echarts";
 
 let DefaultIcon = L.icon({
     iconUrl: icon,
-    shadowUrl: iconShadow
+    shadowUrl: iconShadow,
+    iconAnchor: [12.5, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 class Map extends React.Component {
@@ -22,19 +23,22 @@ class Map extends React.Component {
                     key: 'cd',
                     name: '成都',
                     lang: '104.071887',
-                    lat: '30.662205'
+                    lat: '30.662205',
+                    color: "orange"
                 },
                 {
                     key: 'bj',
                     name: '北京',
                     lang: '116.46',
-                    lat: '39.92'
+                    lat: '39.92',
+                    color: "yellow"
                 },
                 {
                     key: 'sh',
                     name: '上海',
                     lang: '121.4737021',
-                    lat: '31.2303904'
+                    lat: '31.2303904',
+                    color: "green"
                 }
             ],
             linesDataSource: [
@@ -108,8 +112,8 @@ class Map extends React.Component {
                 grid: { top: 10, bottom: 20, right: 20 },
                 title: {
                     text: `${record.name}气温趋势图`,
-                    textStyle:{
-                        color:"white"
+                    textStyle: {
+                        color: "white"
                     }
                 },
                 tooltip: {
@@ -151,6 +155,11 @@ class Map extends React.Component {
                     }
                 },
                 series: [{
+                    showSymbol: false,
+                    // itemStyle: {
+                    //     show: false,
+                    //     opacity: 0
+                    // },
                     name: '气温（℃）',
                     type: 'line',
                     data,
@@ -179,8 +188,8 @@ class Map extends React.Component {
                 grid: { top: 10, bottom: 20, right: 20 },
                 title: {
                     text: `${record.name}流量趋势图`,
-                    textStyle:{
-                        color:"white"
+                    textStyle: {
+                        color: "white"
                     }
                 },
                 tooltip: {
@@ -224,7 +233,8 @@ class Map extends React.Component {
                     name: '流量',
                     type: 'line',
                     data,
-                    smooth: true
+                    smooth: true,
+                    showSymbol: false
                 }]
             }, true);
         };
@@ -271,17 +281,21 @@ class Map extends React.Component {
         // }).addTo(this.map);
         this.state.dataSource.forEach(item => {
             let marker = L.marker([item.lat, item.lang], {
-                color: "red",
+                data: item
+            });
+            let circleMarker = L.circleMarker([item.lat, item.lang], {
+                color: item.color,
                 data: item
             });
             marker.bindTooltip(item.name).openTooltip();
             marker.addTo(this.map);
+            circleMarker.addTo(this.map);
             marker.on("click", (event) => {
                 this.refreshCharts(event.target.options.data);
             });
         });
         this.state.linesDataSource.forEach(item => {
-            let line = L.polyline(item.latLangs, { color: item.color ,data: item});
+            let line = L.polyline(item.latLangs, { color: item.color, data: item });
             line.bindTooltip(item.name).openTooltip();
             line.addTo(this.map)
             line.on("click", (event) => {
