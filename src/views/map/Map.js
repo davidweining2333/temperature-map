@@ -329,37 +329,44 @@ class Map extends React.Component {
     render() {
 
         return <div className="body">
-            <div className="markes-table-area">
-                <h4>位置列表</h4>
-                <Table dataSource={this.state.dataSource} columns={this.state.columns} size="small"
-                    onRow={record => {
-                        return {
-                            onClick: event => {
-                                this.map.setView([record.lat, record.lang]);
-                                this.refreshCharts(record);
-                                console.log(record)
-                            }, // 点击行
-                        };
-                    }} />
+            <div className="header">A Map Application</div>
+            <div className="content">
+                <div className="leftPanel">
+                    <div className="markes-table-area">
+                        <h4>位置列表</h4>
+                        <Table dataSource={this.state.dataSource} columns={this.state.columns} size="small"
+                            onRow={record => {
+                                return {
+                                    onClick: event => {
+                                        this.map.setView([record.lat, record.lang]);
+                                        this.refreshCharts(record);
+                                        console.log(record)
+                                    }, // 点击行
+                                };
+                            }} />
+                    </div>
+                    <div className="lines-table-area">
+                        <h4>线路列表</h4>
+                        <Table dataSource={this.state.linesDataSource} columns={this.state.linesColumns} size="small"
+                            onRow={record => {
+                                return {
+                                    onClick: event => {
+                                        this.map.fitBounds(record.latLangs);
+                                        this.refreshLineCharts(record);
+                                        console.log(record)
+                                    }, // 点击行
+                                };
+                            }} />
+                    </div>
+                </div>
+                <div className="rightPanel">
+                    <div id="map"></div>
+                    <div className="statistics-area">
+                        {/* <h4>气温趋势图</h4> */}
+                        <div id="tempuratureCharts"></div>
+                    </div>
+                </div>
             </div>
-            <div className="lines-table-area">
-                <h4>线路列表</h4>
-                <Table dataSource={this.state.linesDataSource} columns={this.state.linesColumns} size="small"
-                    onRow={record => {
-                        return {
-                            onClick: event => {
-                                this.map.fitBounds(record.latLangs);
-                                this.refreshLineCharts(record);
-                                console.log(record)
-                            }, // 点击行
-                        };
-                    }} />
-            </div>
-            <div className="statistics-area">
-                {/* <h4>气温趋势图</h4> */}
-                <div id="tempuratureCharts"></div>
-            </div>
-            <div id="map"></div>
         </div>
     }
 }
